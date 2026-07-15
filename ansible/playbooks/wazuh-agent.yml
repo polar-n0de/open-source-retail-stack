@@ -1,0 +1,37 @@
+---
+- name: Deploy Wazuh Agent
+  hosts: lxc
+  become: true
+  vars:
+    wazuh_manager_ip: "192.168.1.X"
+  tasks:
+    - name: Install gpg
+      apt:
+        name: gpg
+        state: present
+        update_cache: yes
+
+    - name: Add Wazuh repo key
+      get_url:
+        url: https://packages.wazuh.com/key/GPG-KEY-WAZUH
+        dest: /usr/share/keyrings/wazuh.gpg
+        mode: '0644'
+
+    - name: Add Wazuh repo
+      apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/wazuh.gpg] https://packages.wazuh.com/4.x/apt/ stable main"
+        state: present
+
+    - name: Install Wazuh agent
+      apt:
+        name: wazuh-agent
+        update_cache: yes
+        state: present
+      environment:
+        WAZUH_MANAGER: "{{ wazuh_manager_ip }}"
+
+    - name: Enable and start agent
+      systemd:
+        name: wazuh-agent
+        enabled: yes
+        state: started

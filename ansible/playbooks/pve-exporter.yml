@@ -1,0 +1,76 @@
+---
+- name: Install Prometheus PVE Exporter
+  hosts: prometheus
+  become: true
+
+  vars:
+    pve_exporter_version: "3.9.0"
+    pve_host: "192.168.1.X"
+    pve_token_id: "pve-exporter@pve!prometheus"
+    pve_token_secret: "CHANGEME"
+
+  tasks:
+    - name: Install dependencies
+      apt:
+        name:
+          - python3-pip
+          - python3-venv
+        state: present
+        update_cache: yes
+
+    - name: Create pve-exporter user
+      user:
+        name: pve-exporter
+        system: yes
+        shell: /bin/false
+        create_home: no
+
+    - name: Create virtualenv and install pve-exporter
+      pip:
+        name: prometheus-pve-exporter
+        version: "{{ pve_exporter_version }}"
+        virtualenv: /opt/pve-exporter
+        virtualenv_command: python3 -m venv
+
+    - name: Create config directory
+      file:
+        path: /etc/pve-exporter
+        state: directory
+        owner: pve-exporter
+        mode: '0750'
+
+    - name: Write pve-exporter config
+      copy:
+        dest: /etc/pve-exporter/config.yml
+        owner: pve-exporter
+        mode: '0640'
+        content: |
+          default:
+            user: pve-exporter@pve
+            token_name: prometheus
+            token_value: {{ pve_token_secret }}
+            verify_ssl: false
+
+    - name: Create systemd service
+      copy:
+        dest: /etc/systemd/system/pve-exporter.service
+        content: |
+          [Unit]
+          Description=Prometheus PVE Exporter
+          After=network.target
+
+          [Service]
+          User=pve-exporter
+          ExecStart=/opt/pve-exporter/bin/pve_exporter --config.file=/etc/pve-exporter/config.yml
+          Restart=always
+          RestartSec=5
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Enable and start pve-exporter
+      systemd:
+        name: pve-exporter
+        enabled: yes
+        state: started
+        daemon_reload: yes

@@ -1,0 +1,42 @@
+---
+# kernel-hardening.yml
+# CVE-2026-31431 (Copy Fail), CVE-2026-43284/43500 (Dirty Frag), CVE-2026-46333 (ptrace)
+#
+# NOTE: LXCs share Proxmox host kernel.
+# - No sysctl (kernel is read-only from LXC)
+# - No kernel updates (kernel lives on host)
+# - Module blacklisting + userspace package updates only
+
+- name: Kernel vulnerability mitigation - LXCs only
+  hosts: lxc
+  become: true
+  tasks:
+    - name: "[CVE-2026-31431] Blacklist algif_aead"
+      copy:
+        dest: /etc/modprobe.d/disable-algif.conf
+        content: |
+          install algif_aead /bin/false
+          install algif_skcipher /bin/false
+        mode: '0644'
+
+    - name: "[CVE-2026-43284/43500] Blacklist Dirty Frag modules"
+      copy:
+        dest: /etc/modprobe.d/disable-dirtyfrag.conf
+        content: |
+          install xfrm_algo /bin/false
+          install esp4 /bin/false
+          install esp6 /bin/false
+        mode: '0644'
+
+    - name: Update and upgrade userspace packages
+      apt:
+        update_cache: yes
+        upgrade: dist
+        autoremove: yes
+
+    - name: Show summary
+      debug:
+        msg:
+          - "LXC: {{ inventory_hostname }}"
+          - "Kernel (host): {{ ansible_kernel }}"
+          - "Module blacklisting applied"
