@@ -1,0 +1,25 @@
+all:
+  children:
+    lxc:
+      hosts:
+        urbackup:
+          ansible_host: 192.168.1.X
+        prometheus:
+          ansible_host: 192.168.1.X
+        samba:
+          ansible_host: 192.168.1.X
+          ansible_user: srv_samba
+          ansible_become: true
+          ansible_become_method: sudo
+          ansible_become_pass: ""
+        tailscale:
+          ansible_host: 192.168.1.X
+    monitoring:
+      hosts:
+        wazuh:
+          ansible_host: 192.168.1.X
+  vars:
+    ansible_user: root
+    ansible_ssh_private_key_file: ~/.ssh/ansible_key
+    ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+    ansible_python_interpreter: /usr/bin/python3
