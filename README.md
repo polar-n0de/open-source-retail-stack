@@ -26,9 +26,8 @@ Deployed on a 12-year-old HP desktop with zero licensing cost.
 - HDD 3TB (URBackup repo + Samba — ZFS)
 
 ## Architecture
-
-'''
-[IPROXMOX HOST
+```
+ [PROXMOX HOST]
 ├── LXC 100 · URBackup      192.168.1.x
 ├── LXC 101 · Prometheus    192.168.1.x
 ├── LXC 102 · Samba         192.168.1.x
@@ -39,7 +38,7 @@ EXTERNAL
 ├── TPV-1 · Netdata + URBackup client
 └── TPV-2 · Netdata + URBackup client
 
-'''
+```
 
 ## Automation (Ansible)
 
