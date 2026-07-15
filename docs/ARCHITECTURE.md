@@ -1,4 +1,4 @@
-cat > docs/ARCHITECTURE.md << 'EOF'
+
 # Architecture
 
 ## Overview
